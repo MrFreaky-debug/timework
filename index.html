@@ -9,7 +9,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { display: flex; height: 100vh; }
         
-        /* Menu boczne */
         .sidebar {
             width: 220px;
             background: #2c3e50;
@@ -31,14 +30,12 @@
         }
         .sidebar a:hover { background: #1abc9c; }
 
-        /* Główna zawartość */
         .content {
             flex-grow: 1;
             padding: 20px;
         }
         .hidden { display: none; }
         
-        /* Formularz liczenia czasu */
         select, button, input {
             font-size: 16px;
             margin: 10px;
@@ -49,38 +46,34 @@
 </head>
 <body>
 
-    <!-- Sidebar (Menu boczne) -->
     <div class="sidebar">
         <h2>Menu</h2>
         <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
         <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
     </div>
 
-    <!-- Główna zawartość -->
     <div class="content">
         
-        <!-- Strona Główna -->
         <div id="home">
             <h1>Witaj na stronie!</h1>
-            <p>Ta aplikacja pozwala na mierzenie czasu wykonywania różnych czynności i eksport wyników do pliku Excel.</p>
+            <p>Ta aplikacja pozwala na mierzenie czasu i eksport wyników do pliku Excel.</p>
             <p>Przejdź do zakładki <b>Liczenie czasu</b>, aby rozpocząć.</p>
         </div>
 
-        <!-- Liczenie czasu -->
         <div id="timer" class="hidden">
             <h2>Wybierz czynność i mierz czas</h2>
-            <select id="taskSelect">
-                <option value="Praca">Praca</option>
-                <option value="Ćwiczenia">Ćwiczenia</option>
-                <option value="Nauka">Nauka</option>
-                <option value="Odpoczynek">Odpoczynek</option>
-            </select>
+            <select id="taskSelect"></select>
             
             <button id="startButton">Start</button>
             <button id="stopButton" disabled>Stop</button>
             <button id="exportButton">📂 Eksportuj do XLSX</button>
             <button id="clearButton">🗑 Wyczyść wyniki</button>
             
+            <h3>Zarządzaj czynnościami</h3>
+            <input type="text" id="newTaskInput" placeholder="Nowa czynność">
+            <button id="addTaskButton">➕ Dodaj</button>
+            <button id="removeTaskButton">❌ Usuń wybraną</button>
+
             <h3>Filtruj wyniki</h3>
             <label>Od: <input type="date" id="startDate"></label>
             <label>Do: <input type="date" id="endDate"></label>
@@ -96,7 +89,6 @@
         let startTime;
         let resultsArray = [];
 
-        // Funkcja przełączania zakładek
         function showPage(page) {
             document.getElementById('home').classList.add('hidden');
             document.getElementById('timer').classList.add('hidden');
@@ -117,12 +109,11 @@
             const seconds = String(elapsedTime.getUTCSeconds()).padStart(2, '0');
 
             const selectedTask = document.getElementById('taskSelect').value;
-            const date = new Date().toISOString().split('T')[0];
+            const date = new Date().toLocaleDateString('pl-PL');
             const resultText = `${date} | ${selectedTask}: ${hours}:${minutes}:${seconds}`;
             
             resultsArray.push({ Data: date, Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
 
-            // Zapisz wyniki do LocalStorage
             localStorage.setItem('results', JSON.stringify(resultsArray));
 
             displayResults(resultsArray);
@@ -131,7 +122,6 @@
             this.disabled = true;
         });
 
-        // Wczytaj zapisane wyniki po uruchomieniu strony
         function loadResults() {
             const savedResults = localStorage.getItem('results');
             if (savedResults) {
@@ -140,7 +130,6 @@
             }
         }
 
-        // Funkcja do wyświetlania wyników
         function displayResults(results) {
             const resultsList = document.getElementById('results');
             resultsList.innerHTML = "";
@@ -151,7 +140,6 @@
             });
         }
 
-        // Filtruj wyniki po dacie
         document.getElementById('filterButton').addEventListener('click', function() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
@@ -165,7 +153,6 @@
             displayResults(filteredResults);
         });
 
-        // Eksport do XLSX
         document.getElementById('exportButton').addEventListener('click', function() {
             if (resultsArray.length === 0) {
                 alert("Brak danych do eksportu!");
@@ -179,7 +166,6 @@
             XLSX.writeFile(workbook, "wyniki.xlsx");
         });
 
-        // Czyszczenie wyników
         document.getElementById('clearButton').addEventListener('click', function() {
             if (confirm("Czy na pewno chcesz usunąć wszystkie wyniki?")) {
                 resultsArray = [];
@@ -188,8 +174,42 @@
             }
         });
 
-        // Wczytaj wyniki na start
-        window.onload = loadResults;
+        document.getElementById('addTaskButton').addEventListener('click', function() {
+            const task = document.getElementById('newTaskInput').value.trim();
+            if (task) {
+                const select = document.getElementById('taskSelect');
+                const option = document.createElement('option');
+                option.value = task;
+                option.textContent = task;
+                select.appendChild(option);
+                saveTasks();
+            }
+        });
+
+        document.getElementById('removeTaskButton').addEventListener('click', function() {
+            const select = document.getElementById('taskSelect');
+            if (select.value) {
+                select.remove(select.selectedIndex);
+                saveTasks();
+            }
+        });
+
+        function saveTasks() {
+            const select = document.getElementById('taskSelect');
+            const tasks = Array.from(select.options).map(option => option.value);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        window.onload = function() {
+            loadResults();
+            const savedTasks = JSON.parse(localStorage.getItem('tasks')) || ["Praca", "Ćwiczenia", "Nauka", "Odpoczynek"];
+            savedTasks.forEach(task => {
+                const option = document.createElement('option');
+                option.value = task;
+                option.textContent = task;
+                document.getElementById('taskSelect').appendChild(option);
+            });
+        };
     </script>
 
 </body>
