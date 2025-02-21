@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liczenie czasu czynności</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
         select, button { font-size: 16px; margin: 10px; padding: 5px; }
-        #results { margin-top: 20px; }
+        #results { margin-top: 20px; text-align: left; display: inline-block; }
     </style>
 </head>
 <body>
@@ -22,13 +23,15 @@
     
     <button id="startButton">Start</button>
     <button id="stopButton" disabled>Stop</button>
+    <button id="exportButton">Eksportuj do XLSX</button>
     
     <h3>Wyniki</h3>
     <ul id="results"></ul>
 
     <script>
-        let startTime, interval;
-        
+        let startTime;
+        let resultsArray = []; // Tablica do przechowywania wyników
+
         document.getElementById('startButton').addEventListener('click', function() {
             startTime = new Date();
             document.getElementById('stopButton').disabled = false;
@@ -49,8 +52,24 @@
             resultItem.textContent = resultText;
             document.getElementById('results').appendChild(resultItem);
 
+            // Dodaj wynik do tablicy
+            resultsArray.push({ Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
+
             document.getElementById('startButton').disabled = false;
             this.disabled = true;
+        });
+
+        document.getElementById('exportButton').addEventListener('click', function() {
+            if (resultsArray.length === 0) {
+                alert("Brak danych do eksportu!");
+                return;
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(resultsArray);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Wyniki");
+
+            XLSX.writeFile(workbook, "wyniki.xlsx");
         });
     </script>
 </body>
