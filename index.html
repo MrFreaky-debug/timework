@@ -39,7 +39,7 @@
         .hidden { display: none; }
         
         /* Formularz liczenia czasu */
-        select, button {
+        select, button, input {
             font-size: 16px;
             margin: 10px;
             padding: 10px;
@@ -79,7 +79,13 @@
             <button id="startButton">Start</button>
             <button id="stopButton" disabled>Stop</button>
             <button id="exportButton">📂 Eksportuj do XLSX</button>
+            <button id="clearButton">🗑 Wyczyść wyniki</button>
             
+            <h3>Filtruj wyniki</h3>
+            <label>Od: <input type="date" id="startDate"></label>
+            <label>Do: <input type="date" id="endDate"></label>
+            <button id="filterButton">🔍 Filtruj</button>
+
             <h3>Wyniki</h3>
             <ul id="results"></ul>
         </div>
@@ -111,18 +117,55 @@
             const seconds = String(elapsedTime.getUTCSeconds()).padStart(2, '0');
 
             const selectedTask = document.getElementById('taskSelect').value;
-            const resultText = `${selectedTask}: ${hours}:${minutes}:${seconds}`;
+            const date = new Date().toISOString().split('T')[0];
+            const resultText = `${date} | ${selectedTask}: ${hours}:${minutes}:${seconds}`;
             
-            const resultItem = document.createElement('li');
-            resultItem.textContent = resultText;
-            document.getElementById('results').appendChild(resultItem);
+            resultsArray.push({ Data: date, Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
 
-            resultsArray.push({ Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
+            // Zapisz wyniki do LocalStorage
+            localStorage.setItem('results', JSON.stringify(resultsArray));
 
+            displayResults(resultsArray);
+            
             document.getElementById('startButton').disabled = false;
             this.disabled = true;
         });
 
+        // Wczytaj zapisane wyniki po uruchomieniu strony
+        function loadResults() {
+            const savedResults = localStorage.getItem('results');
+            if (savedResults) {
+                resultsArray = JSON.parse(savedResults);
+                displayResults(resultsArray);
+            }
+        }
+
+        // Funkcja do wyświetlania wyników
+        function displayResults(results) {
+            const resultsList = document.getElementById('results');
+            resultsList.innerHTML = "";
+            results.forEach(result => {
+                const resultItem = document.createElement('li');
+                resultItem.textContent = `${result.Data} | ${result.Czynność}: ${result.Czas}`;
+                resultsList.appendChild(resultItem);
+            });
+        }
+
+        // Filtruj wyniki po dacie
+        document.getElementById('filterButton').addEventListener('click', function() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert("Wybierz zakres dat!");
+                return;
+            }
+
+            const filteredResults = resultsArray.filter(result => result.Data >= startDate && result.Data <= endDate);
+            displayResults(filteredResults);
+        });
+
+        // Eksport do XLSX
         document.getElementById('exportButton').addEventListener('click', function() {
             if (resultsArray.length === 0) {
                 alert("Brak danych do eksportu!");
@@ -135,6 +178,18 @@
 
             XLSX.writeFile(workbook, "wyniki.xlsx");
         });
+
+        // Czyszczenie wyników
+        document.getElementById('clearButton').addEventListener('click', function() {
+            if (confirm("Czy na pewno chcesz usunąć wszystkie wyniki?")) {
+                resultsArray = [];
+                localStorage.removeItem('results');
+                displayResults([]);
+            }
+        });
+
+        // Wczytaj wyniki na start
+        window.onload = loadResults;
     </script>
 
 </body>
