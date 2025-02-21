@@ -6,31 +6,96 @@
     <title>Liczenie czasu czynności</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        select, button { font-size: 16px; margin: 10px; padding: 5px; }
-        #results { margin-top: 20px; text-align: left; display: inline-block; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { display: flex; height: 100vh; }
+        
+        /* Menu boczne */
+        .sidebar {
+            width: 220px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar h2 { text-align: center; margin-bottom: 20px; }
+        .sidebar a {
+            display: block;
+            padding: 10px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 10px;
+            background: #34495e;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .sidebar a:hover { background: #1abc9c; }
+
+        /* Główna zawartość */
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .hidden { display: none; }
+        
+        /* Formularz liczenia czasu */
+        select, button {
+            font-size: 16px;
+            margin: 10px;
+            padding: 10px;
+        }
+        #results { margin-top: 20px; text-align: left; }
     </style>
 </head>
 <body>
-    <h2>Wybierz czynność i mierz czas</h2>
-    
-    <select id="taskSelect">
-        <option value="Praca">Praca</option>
-        <option value="Ćwiczenia">Ćwiczenia</option>
-        <option value="Nauka">Nauka</option>
-        <option value="Odpoczynek">Odpoczynek</option>
-    </select>
-    
-    <button id="startButton">Start</button>
-    <button id="stopButton" disabled>Stop</button>
-    <button id="exportButton">Eksportuj do XLSX</button>
-    
-    <h3>Wyniki</h3>
-    <ul id="results"></ul>
+
+    <!-- Sidebar (Menu boczne) -->
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
+        <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
+    </div>
+
+    <!-- Główna zawartość -->
+    <div class="content">
+        
+        <!-- Strona Główna -->
+        <div id="home">
+            <h1>Witaj na stronie!</h1>
+            <p>Ta aplikacja pozwala na mierzenie czasu wykonywania różnych czynności i eksport wyników do pliku Excel.</p>
+            <p>Przejdź do zakładki <b>Liczenie czasu</b>, aby rozpocząć.</p>
+        </div>
+
+        <!-- Liczenie czasu -->
+        <div id="timer" class="hidden">
+            <h2>Wybierz czynność i mierz czas</h2>
+            <select id="taskSelect">
+                <option value="Praca">Praca</option>
+                <option value="Ćwiczenia">Ćwiczenia</option>
+                <option value="Nauka">Nauka</option>
+                <option value="Odpoczynek">Odpoczynek</option>
+            </select>
+            
+            <button id="startButton">Start</button>
+            <button id="stopButton" disabled>Stop</button>
+            <button id="exportButton">📂 Eksportuj do XLSX</button>
+            
+            <h3>Wyniki</h3>
+            <ul id="results"></ul>
+        </div>
+
+    </div>
 
     <script>
         let startTime;
-        let resultsArray = []; // Tablica do przechowywania wyników
+        let resultsArray = [];
+
+        // Funkcja przełączania zakładek
+        function showPage(page) {
+            document.getElementById('home').classList.add('hidden');
+            document.getElementById('timer').classList.add('hidden');
+            document.getElementById(page).classList.remove('hidden');
+        }
 
         document.getElementById('startButton').addEventListener('click', function() {
             startTime = new Date();
@@ -52,7 +117,6 @@
             resultItem.textContent = resultText;
             document.getElementById('results').appendChild(resultItem);
 
-            // Dodaj wynik do tablicy
             resultsArray.push({ Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
 
             document.getElementById('startButton').disabled = false;
@@ -72,5 +136,6 @@
             XLSX.writeFile(workbook, "wyniki.xlsx");
         });
     </script>
+
 </body>
 </html>
