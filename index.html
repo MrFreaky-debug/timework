@@ -50,6 +50,7 @@
         <h2>Menu</h2>
         <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
         <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
+        <a href="#" onclick="showPage('tasks')">🛠 Zarządzanie czynnościami</a>
         <a href="#" onclick="showPage('archive')">📂 Archiwum wyników</a>
     </div>
 
@@ -67,14 +68,16 @@
             <button id="startButton">Start</button>
             <button id="stopButton" disabled>Stop</button>
             <button id="clearButton">🗑 Wyczyść wyniki</button>
-            
-            <h3>Zarządzaj czynnościami</h3>
-            <input type="text" id="newTaskInput" placeholder="Nowa czynność">
-            <button id="addTaskButton">➕ Dodaj</button>
-            <button id="removeTaskButton">❌ Usuń wybraną</button>
 
             <h3>Wyniki</h3>
             <ul id="results"></ul>
+        </div>
+
+        <div id="tasks" class="hidden">
+            <h2>Zarządzanie czynnościami</h2>
+            <input type="text" id="newTaskInput" placeholder="Nowa czynność">
+            <button id="addTaskButton">➕ Dodaj</button>
+            <button id="removeTaskButton">❌ Usuń wybraną</button>
         </div>
 
         <div id="archive" class="hidden">
@@ -99,11 +102,8 @@
         let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
         function showPage(page) {
-            document.getElementById('home').classList.add('hidden');
-            document.getElementById('timer').classList.add('hidden');
-            document.getElementById('archive').classList.add('hidden');
+            document.querySelectorAll('.content > div').forEach(div => div.classList.add('hidden'));
             document.getElementById(page).classList.remove('hidden');
-
             if (page === 'archive') displayArchive();
         }
 
@@ -136,17 +136,13 @@
         document.getElementById('stopButton').addEventListener('click', function() {
             const endTime = new Date();
             const elapsedTime = new Date(endTime - startTime);
-            const hours = String(elapsedTime.getUTCHours()).padStart(2, '0');
-            const minutes = String(elapsedTime.getUTCMinutes()).padStart(2, '0');
-            const seconds = String(elapsedTime.getUTCSeconds()).padStart(2, '0');
-
+            const formattedTime = elapsedTime.toISOString().substr(11, 8);
             const selectedTask = document.getElementById('taskSelect').value;
             const date = new Date().toLocaleDateString('pl-PL');
-            
-            archiveArray.push({ Data: date, Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
+            archiveArray.push({ Data: date, Czynność: selectedTask, Czas: formattedTime });
             localStorage.setItem('archive', JSON.stringify(archiveArray));
             displayArchive();
-
+            document.getElementById('results').innerHTML += `<li>${date} | ${selectedTask}: ${formattedTime}</li>`;
             document.getElementById('startButton').disabled = false;
             this.disabled = true;
         });
@@ -155,13 +151,6 @@
             const archiveList = document.getElementById('archiveResults');
             archiveList.innerHTML = archiveArray.map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
         }
-
-        document.getElementById('filterButton').addEventListener('click', function() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const filteredResults = archiveArray.filter(result => result.Data >= startDate && result.Data <= endDate);
-            document.getElementById('archiveResults').innerHTML = filteredResults.map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
-        });
 
         document.getElementById('resetFilterButton').addEventListener('click', displayArchive);
         window.onload = displayArchive;
