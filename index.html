@@ -41,7 +41,7 @@
             margin: 10px;
             padding: 10px;
         }
-        #results, #archiveResults { margin-top: 20px; text-align: left; }
+        #results, #archiveResults, #taskList { margin-top: 20px; text-align: left; }
     </style>
 </head>
 <body>
@@ -77,7 +77,7 @@
             <h2>Zarządzanie czynnościami</h2>
             <input type="text" id="newTaskInput" placeholder="Nowa czynność">
             <button id="addTaskButton">➕ Dodaj</button>
-            <button id="removeTaskButton">❌ Usuń wybraną</button>
+            <ul id="taskList"></ul>
         </div>
 
         <div id="archive" class="hidden">
@@ -109,11 +109,17 @@
 
         function updateTaskList() {
             const taskSelect = document.getElementById('taskSelect');
+            const taskList = document.getElementById('taskList');
             taskSelect.innerHTML = "";
-            tasks.forEach(task => {
+            taskList.innerHTML = "";
+            tasks.forEach((task, index) => {
                 let option = document.createElement("option");
                 option.text = task;
                 taskSelect.add(option);
+                
+                let li = document.createElement("li");
+                li.innerHTML = `${task} <button onclick="removeTask(${index})">❌</button>`;
+                taskList.appendChild(li);
             });
         }
         updateTaskList();
@@ -127,32 +133,29 @@
             }
         });
 
-        document.getElementById('startButton').addEventListener('click', function() {
-            startTime = new Date();
-            document.getElementById('stopButton').disabled = false;
-            this.disabled = true;
+        function removeTask(index) {
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            updateTaskList();
+        }
+
+        document.getElementById('filterButton').addEventListener('click', function() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            const archiveList = document.getElementById('archiveResults');
+            archiveList.innerHTML = archiveArray.filter(result => {
+                let resultDate = new Date(result.Data.split('.').reverse().join('-'));
+                return resultDate >= startDate && resultDate <= endDate;
+            }).map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
         });
 
-        document.getElementById('stopButton').addEventListener('click', function() {
-            const endTime = new Date();
-            const elapsedTime = new Date(endTime - startTime);
-            const formattedTime = elapsedTime.toISOString().substr(11, 8);
-            const selectedTask = document.getElementById('taskSelect').value;
-            const date = new Date().toLocaleDateString('pl-PL');
-            archiveArray.push({ Data: date, Czynność: selectedTask, Czas: formattedTime });
-            localStorage.setItem('archive', JSON.stringify(archiveArray));
-            displayArchive();
-            document.getElementById('results').innerHTML += `<li>${date} | ${selectedTask}: ${formattedTime}</li>`;
-            document.getElementById('startButton').disabled = false;
-            this.disabled = true;
-        });
+        document.getElementById('resetFilterButton').addEventListener('click', displayArchive);
 
         function displayArchive() {
             const archiveList = document.getElementById('archiveResults');
             archiveList.innerHTML = archiveArray.map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
         }
-
-        document.getElementById('resetFilterButton').addEventListener('click', displayArchive);
+        
         window.onload = displayArchive;
     </script>
 </body>
