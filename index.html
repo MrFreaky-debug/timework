@@ -84,19 +84,19 @@
             <label>Od: <input type="date" id="startDate"></label>
             <label>Do: <input type="date" id="endDate"></label>
             <button id="filterButton">🔍 Filtruj</button>
+            <button id="resetFilterButton">🔄 Resetuj</button>
 
             <button id="exportButton">📂 Eksportuj do XLSX</button>
 
             <h3>Zarchiwizowane wyniki</h3>
             <ul id="archiveResults"></ul>
         </div>
-
     </div>
 
     <script>
         let startTime;
-        let resultsArray = [];
         let archiveArray = JSON.parse(localStorage.getItem('archive')) || [];
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
         function showPage(page) {
             document.getElementById('home').classList.add('hidden');
@@ -106,6 +106,26 @@
 
             if (page === 'archive') displayArchive();
         }
+
+        function updateTaskList() {
+            const taskSelect = document.getElementById('taskSelect');
+            taskSelect.innerHTML = "";
+            tasks.forEach(task => {
+                let option = document.createElement("option");
+                option.text = task;
+                taskSelect.add(option);
+            });
+        }
+        updateTaskList();
+
+        document.getElementById('addTaskButton').addEventListener('click', function() {
+            const newTask = document.getElementById('newTaskInput').value;
+            if (newTask && !tasks.includes(newTask)) {
+                tasks.push(newTask);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                updateTaskList();
+            }
+        });
 
         document.getElementById('startButton').addEventListener('click', function() {
             startTime = new Date();
@@ -122,23 +142,14 @@
 
             const selectedTask = document.getElementById('taskSelect').value;
             const date = new Date().toLocaleDateString('pl-PL');
-            const resultText = `${date} | ${selectedTask}: ${hours}:${minutes}:${seconds}`;
             
-            resultsArray.push(resultText);
             archiveArray.push({ Data: date, Czynność: selectedTask, Czas: `${hours}:${minutes}:${seconds}` });
-
             localStorage.setItem('archive', JSON.stringify(archiveArray));
-
-            displayResults();
+            displayArchive();
 
             document.getElementById('startButton').disabled = false;
             this.disabled = true;
         });
-
-        function displayResults() {
-            const resultsList = document.getElementById('results');
-            resultsList.innerHTML = resultsArray.map(result => `<li>${result}</li>`).join('');
-        }
 
         function displayArchive() {
             const archiveList = document.getElementById('archiveResults');
@@ -148,38 +159,12 @@
         document.getElementById('filterButton').addEventListener('click', function() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
-
-            if (!startDate || !endDate) {
-                alert("Wybierz zakres dat!");
-                return;
-            }
-
             const filteredResults = archiveArray.filter(result => result.Data >= startDate && result.Data <= endDate);
             document.getElementById('archiveResults').innerHTML = filteredResults.map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
         });
 
-        document.getElementById('exportButton').addEventListener('click', function() {
-            if (archiveArray.length === 0) {
-                alert("Brak danych do eksportu!");
-                return;
-            }
-
-            const worksheet = XLSX.utils.json_to_sheet(archiveArray);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Archiwum");
-
-            XLSX.writeFile(workbook, "archiwum.xlsx");
-        });
-
-        document.getElementById('clearButton').addEventListener('click', function() {
-            resultsArray = [];
-            document.getElementById('results').innerHTML = "";
-        });
-
-        window.onload = function() {
-            displayArchive();
-        };
+        document.getElementById('resetFilterButton').addEventListener('click', displayArchive);
+        window.onload = displayArchive;
     </script>
-
 </body>
 </html>
