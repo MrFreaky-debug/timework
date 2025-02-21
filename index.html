@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liczenie czasu czynności</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        select, button { font-size: 16px; margin: 10px; padding: 5px; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Wybierz czynność i mierz czas</h2>
+    
+    <select id="taskSelect">
+        <option value="Praca">Praca</option>
+        <option value="Ćwiczenia">Ćwiczenia</option>
+        <option value="Nauka">Nauka</option>
+        <option value="Odpoczynek">Odpoczynek</option>
+    </select>
+    
+    <button id="startButton">Start</button>
+    <button id="stopButton" disabled>Stop</button>
+    
+    <h3>Wyniki</h3>
+    <ul id="results"></ul>
+
+    <script>
+        let startTime, interval;
+        
+        document.getElementById('startButton').addEventListener('click', function() {
+            startTime = new Date();
+            document.getElementById('stopButton').disabled = false;
+            this.disabled = true;
+        });
+
+        document.getElementById('stopButton').addEventListener('click', function() {
+            const endTime = new Date();
+            const elapsedTime = new Date(endTime - startTime);
+            const hours = String(elapsedTime.getUTCHours()).padStart(2, '0');
+            const minutes = String(elapsedTime.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(elapsedTime.getUTCSeconds()).padStart(2, '0');
+
+            const selectedTask = document.getElementById('taskSelect').value;
+            const resultText = `${selectedTask}: ${hours}:${minutes}:${seconds}`;
+            
+            const resultItem = document.createElement('li');
+            resultItem.textContent = resultText;
+            document.getElementById('results').appendChild(resultItem);
+
+            document.getElementById('startButton').disabled = false;
+            this.disabled = true;
+        });
+    </script>
+</body>
+</html>
