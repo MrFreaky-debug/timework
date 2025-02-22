@@ -48,10 +48,10 @@
 
     <div class="sidebar">
         <h2>Menu</h2>
-        <a href="#" onclick="showPage('home')">Strona Główna</a>
-        <a href="#" onclick="showPage('timer')">Liczenie czasu</a>
-        <a href="#" onclick="showPage('tasks')">Zarządzanie czynnościami</a>
-        <a href="#" onclick="showPage('archive')">Archiwum wyników</a>
+        <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
+        <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
+        <a href="#" onclick="showPage('tasks')">🛠 Zarządzanie czynnościami</a>
+        <a href="#" onclick="showPage('archive')">📂 Archiwum wyników</a>
     </div>
 
     <div class="content">
@@ -139,17 +139,24 @@
             updateTaskList();
         }
 
-        document.getElementById('filterButton').addEventListener('click', function() {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
-            const archiveList = document.getElementById('archiveResults');
-            archiveList.innerHTML = archiveArray.filter(result => {
-                let resultDate = new Date(result.Data.split('.').reverse().join('-'));
-                return resultDate >= startDate && resultDate <= endDate;
-            }).map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
+        document.getElementById('startButton').addEventListener('click', function() {
+            startTime = new Date();
+            document.getElementById('stopButton').disabled = false;
+            this.disabled = true;
         });
 
-        document.getElementById('resetFilterButton').addEventListener('click', displayArchive);
+        document.getElementById('stopButton').addEventListener('click', function() {
+            const endTime = new Date();
+            const elapsedTime = new Date(endTime - startTime);
+            const formattedTime = elapsedTime.toISOString().substr(11, 8);
+            const selectedTask = document.getElementById('taskSelect').value;
+            const date = new Date().toLocaleDateString('pl-PL');
+            archiveArray.push({ Data: date, Czynność: selectedTask, Czas: formattedTime });
+            localStorage.setItem('archive', JSON.stringify(archiveArray));
+            displayArchive();
+            document.getElementById('startButton').disabled = false;
+            this.disabled = true;
+        });
 
         function displayArchive() {
             const archiveList = document.getElementById('archiveResults');
