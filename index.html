@@ -48,10 +48,10 @@
 
     <div class="sidebar">
         <h2>Menu</h2>
-        <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
-        <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
-        <a href="#" onclick="showPage('tasks')">🛠 Zarządzanie czynnościami</a>
-        <a href="#" onclick="showPage('archive')">📂 Archiwum wyników</a>
+        <a href="#" onclick="showPage('home')">Strona Główna</a>
+        <a href="#" onclick="showPage('timer')">Liczenie czasu</a>
+        <a href="#" onclick="showPage('tasks')">Zarządzanie czynnościami</a>
+        <a href="#" onclick="showPage('archive')">Archiwum wyników</a>
     </div>
 
     <div class="content">
@@ -67,7 +67,6 @@
             
             <button id="startButton">Start</button>
             <button id="stopButton" disabled>Stop</button>
-            <button id="clearButton">🗑 Wyczyść wyniki</button>
 
             <h3>Wyniki</h3>
             <ul id="results"></ul>
@@ -124,21 +123,6 @@
         }
         updateTaskList();
 
-        document.getElementById('addTaskButton').addEventListener('click', function() {
-            const newTask = document.getElementById('newTaskInput').value;
-            if (newTask && !tasks.includes(newTask)) {
-                tasks.push(newTask);
-                localStorage.setItem('tasks', JSON.stringify(tasks));
-                updateTaskList();
-            }
-        });
-
-        function removeTask(index) {
-            tasks.splice(index, 1);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            updateTaskList();
-        }
-
         document.getElementById('startButton').addEventListener('click', function() {
             startTime = new Date();
             document.getElementById('stopButton').disabled = false;
@@ -150,19 +134,33 @@
             const elapsedTime = new Date(endTime - startTime);
             const formattedTime = elapsedTime.toISOString().substr(11, 8);
             const selectedTask = document.getElementById('taskSelect').value;
-            const date = new Date().toLocaleDateString('pl-PL');
+            const date = new Date().toISOString().split('T')[0];
             archiveArray.push({ Data: date, Czynność: selectedTask, Czas: formattedTime });
             localStorage.setItem('archive', JSON.stringify(archiveArray));
             displayArchive();
-            document.getElementById('startButton').disabled = false;
-            this.disabled = true;
         });
 
-        function displayArchive() {
+        document.getElementById('filterButton').addEventListener('click', function() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            displayArchive(start, end);
+        });
+
+        function displayArchive(start = '', end = '') {
             const archiveList = document.getElementById('archiveResults');
-            archiveList.innerHTML = archiveArray.map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`).join('');
+            archiveList.innerHTML = archiveArray
+                .filter(result => (!start || result.Data >= start) && (!end || result.Data <= end))
+                .map(result => `<li>${result.Data} | ${result.Czynność}: ${result.Czas}</li>`)
+                .join('');
         }
-        
+
+        document.getElementById('exportButton').addEventListener('click', function() {
+            let ws = XLSX.utils.json_to_sheet(archiveArray);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Archiwum");
+            XLSX.writeFile(wb, "archiwum.xlsx");
+        });
+
         window.onload = displayArchive;
     </script>
 </body>
