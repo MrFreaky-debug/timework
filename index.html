@@ -48,10 +48,10 @@
 
     <div class="sidebar">
         <h2>Menu</h2>
-        <a href="#" onclick="showPage('home')">Strona Główna</a>
-        <a href="#" onclick="showPage('timer')">Liczenie czasu</a>
-        <a href="#" onclick="showPage('tasks')">Zarządzanie czynnościami</a>
-        <a href="#" onclick="showPage('archive')">Archiwum wyników</a>
+        <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
+        <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
+        <a href="#" onclick="showPage('tasks')">🛠 Zarządzanie czynnościami</a>
+        <a href="#" onclick="showPage('archive')">📂 Archiwum wyników</a>
     </div>
 
     <div class="content">
@@ -123,28 +123,14 @@
         }
         updateTaskList();
 
-        document.getElementById('startButton').addEventListener('click', function() {
-            startTime = new Date();
-            document.getElementById('stopButton').disabled = false;
-            this.disabled = true;
-        });
-
-        document.getElementById('stopButton').addEventListener('click', function() {
-            const endTime = new Date();
-            const elapsedTime = Math.floor((endTime - startTime) / 1000);
-            const hours = String(Math.floor(elapsedTime / 3600)).padStart(2, '0');
-            const minutes = String(Math.floor((elapsedTime % 3600) / 60)).padStart(2, '0');
-            const seconds = String(elapsedTime % 60).padStart(2, '0');
-            const formattedTime = `${hours}:${minutes}:${seconds}`;
-            const selectedTask = document.getElementById('taskSelect').value;
-            const date = new Date().toISOString().split('T')[0];
-            archiveArray.push({ Data: date, Czynność: selectedTask, Czas: formattedTime });
-            localStorage.setItem('archive', JSON.stringify(archiveArray));
-            
-            document.getElementById('results').innerHTML += `<li>${selectedTask}: ${formattedTime}</li>`;
-            document.getElementById('startButton').disabled = false;
-            document.getElementById('stopButton').disabled = true;
-            displayArchive();
+        document.getElementById('addTaskButton').addEventListener('click', function() {
+            const newTask = document.getElementById('newTaskInput').value.trim();
+            if (newTask && !tasks.includes(newTask)) {
+                tasks.push(newTask);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                updateTaskList();
+                document.getElementById('newTaskInput').value = "";
+            }
         });
 
         document.getElementById('filterButton').addEventListener('click', function() {
@@ -162,13 +148,18 @@
         }
 
         document.getElementById('exportButton').addEventListener('click', function() {
-            let ws = XLSX.utils.json_to_sheet(archiveArray);
+            let filteredData = archiveArray.filter(result => {
+                const start = document.getElementById('startDate').value;
+                const end = document.getElementById('endDate').value;
+                return (!start || result.Data >= start) && (!end || result.Data <= end);
+            });
+            let ws = XLSX.utils.json_to_sheet(filteredData);
             let wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Archiwum");
             XLSX.writeFile(wb, "archiwum.xlsx");
         });
 
-        window.onload = displayArchive;
+        window.onload = updateTaskList;
     </script>
 </body>
 </html>
