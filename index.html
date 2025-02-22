@@ -48,10 +48,10 @@
 
     <div class="sidebar">
         <h2>Menu</h2>
-        <a href="#" onclick="showPage('home')">Strona Główna</a>
-        <a href="#" onclick="showPage('timer')">Liczenie czasu</a>
-        <a href="#" onclick="showPage('tasks')">Zarządzanie czynnościami</a>
-        <a href="#" onclick="showPage('archive')">Archiwum wyników</a>
+        <a href="#" onclick="showPage('home')">🏠 Strona Główna</a>
+        <a href="#" onclick="showPage('timer')">⏱ Liczenie czasu</a>
+        <a href="#" onclick="showPage('tasks')">🛠 Zarządzanie czynnościami</a>
+        <a href="#" onclick="showPage('archive')">📂 Archiwum wyników</a>
     </div>
 
     <div class="content">
@@ -131,12 +131,19 @@
 
         document.getElementById('stopButton').addEventListener('click', function() {
             const endTime = new Date();
-            const elapsedTime = new Date(endTime - startTime);
-            const formattedTime = elapsedTime.toISOString().substr(11, 8);
+            const elapsedTime = Math.floor((endTime - startTime) / 1000);
+            const hours = String(Math.floor(elapsedTime / 3600)).padStart(2, '0');
+            const minutes = String(Math.floor((elapsedTime % 3600) / 60)).padStart(2, '0');
+            const seconds = String(elapsedTime % 60).padStart(2, '0');
+            const formattedTime = `${hours}:${minutes}:${seconds}`;
             const selectedTask = document.getElementById('taskSelect').value;
             const date = new Date().toISOString().split('T')[0];
             archiveArray.push({ Data: date, Czynność: selectedTask, Czas: formattedTime });
             localStorage.setItem('archive', JSON.stringify(archiveArray));
+            
+            document.getElementById('results').innerHTML += `<li>${selectedTask}: ${formattedTime}</li>`;
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('stopButton').disabled = true;
             displayArchive();
         });
 
